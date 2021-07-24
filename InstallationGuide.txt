@@ -7,23 +7,25 @@
    "sudo apt-get update" : This is update the linux terminal
    "sudo apt-get install g++" : This will install the C++ commpiler
    "sudo apt-get install gfortran" : This will install the gfortran compiler.
-======================================================================================================================================================================================
+==============================================================================================================================================================================
 Now we are ready to install lammps from the source code.
 --> The default installation directory for Linux terminal should be as follows:
-C:\Users\pauls(your username will be displayed)\AppData\Local\Packages\CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc\LocalState\rootfs\home\dark990x(username that you have set in linux)
+C:\Users\pauls(your username will be displayed)\AppData\Local\Packages\CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc\LocalState\rootfs\home\dark990x
+(username that you have set in linux)
 --> Create a directory called LAMMPS within the "user directory" i.e., user directory is the username in linux
 --> Download the latest source code from here, i.e., https://www.lammps.org/download.html
 --> Now move the file to the above mentioned directory.
 --> Now use the following command "tar -xvf name-Of-The-LAMMPS-File-With-Proper-Extension" and hit enter.
-======================================================================================================================================================================================
+===============================================================================================================================================================================
 Installing the required commands
 1. use the command "sudo apt install make" to install the make command
 2. Then use either "make yes-manybody no-quip" or "make yes-manybody" depending on your system.
 3. Now enter the following command "make serial".
-======================================================================================================================================================================================
+===============================================================================================================================================================================
 make mode=shlib serial
 make install-python
-Usually, above will put lammps.py as well as liblammps.so in site-packages of python, which is in /usr/local/lib/python2.7/site-packages . Now, if you are using python3, then you may copy lammps.py as well as liblammps.so in /usr/local/lib/python3.7/site-packages. 
+Usually, above will put lammps.py as well as liblammps.so in site-packages of python, which is in /usr/local/lib/python2.7/site-packages . 
+Now, if you are using python3, then you may copy lammps.py as well as liblammps.so in /usr/local/lib/python3.7/site-packages. 
 
 If a new package (say manybody) is installed, then following need to be done:
 make yes=manybody
