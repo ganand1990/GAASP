@@ -8,7 +8,7 @@
 #define tot 20
 #define width 33        //width-1 is the width of coord file
 #define width_ele 2     //width associated with atom type
-#define tot_gen 1
+#define tot_gen 3
 #define rb 8.314e-3
 #define T 300
 //Roulette wheel parameters
@@ -31,21 +31,30 @@ void checkpoint(int,char *[],char *[]);
 
 int main(int argc, char** argv)
 {
-	char *restart;
-	int restart_val=-1;
-	restart = *(argv+1);
-	restart_val = atoi(restart); //conversion of restart (char *) to int
-	printf("%s\t%d\n",restart,restart_val);
+	char *restart1; //first argument, containing retart instructions
+	char *restart2; //second argument, containing the generation number
+	int restart_val = -1;
+	int restart_gen = -1;
+	restart1 = *(argv+1);
+	restart2 = *(argv+2);
+	restart_val = atoi(restart1); //conversion of restart (char *) to int
+	restart_gen = atoi(restart2);
+	printf("%s\t%s\t%d\t%d\n",restart1,restart2,restart_val,restart_gen);
         if((restart_val != 1) && (restart_val != 0))
 	{	
 		printf("Enter 0 if you want fresh start and 1, if if it is restarting\n");
+		exit(1);
+	}
+	else if((restart_val != 0) && (restart_gen == 1))
+	{
+		printf("Restarting the calculation and yet generation value not provided!\n");
 		exit(1);
 	}
 	//cleaning the directory, to avoid appending on earlier files.
         system("./clean.bash");
 	srand(clock());
 
-	int i,j,k,l,p,counter,u,v;
+	int i,j,k,p,counter,u,v;
 	int total = num*tot;
 	int ret_const = -1;	// this variable would return a constant, whose value can be 1,2,3 and 4 depicting child 1, child 2, both children and none of children, respectively has/have been chosen. 
 	FILE *f_atom;
@@ -72,8 +81,7 @@ int main(int argc, char** argv)
 			printf("Issue with array allocation- 1\n");
 			exit(1);
 		}
-	}
-	
+	}	
 	char *atom[total];
         for(i=0;i<total;i++)
         {
@@ -125,14 +133,16 @@ int main(int argc, char** argv)
                         exit(1);
                 }
         }
-	
 	//reading files.
 	counter = 0;
 	for(p=0;p<tot;p++)
 	{
 		if(restart_val == 0)
-		sprintf(atfile,"atomlist.%d",p);
-        	
+			sprintf(atfile,"atomlist.%d",p);
+		else if(restart_val == 1) //if, calculation is being restarted
+			sprintf(atfile,"alist.backup.%d",p);
+                else
+			;	
         
         	f_atom = fopen(atfile,"r");
         	if(f_atom == NULL)
@@ -141,8 +151,7 @@ int main(int argc, char** argv)
                 	exit(1);
         	}
         	
-        
-        	for(i = (0 + counter);i < (num + counter);i++)
+                for(i = (0 + counter);i < (num + counter);i++)
         	{
                 	for(j=0;j<width_ele;j++)
                 	{
@@ -152,9 +161,12 @@ int main(int argc, char** argv)
         	fclose(f_atom);
         
         	if(restart_val == 0)
-		sprintf(cordfile,"coord.%d",p);
-        	
-        	f_coord = fopen(cordfile,"r");
+			sprintf(cordfile,"coord.%d",p);
+		else if(restart_val == 1) //if, calculation is being restarted.
+			sprintf(cordfile,"cord.backup.%d",p);
+		else
+			;
+                f_coord = fopen(cordfile,"r");
         	if(f_coord == NULL)
         	{
                 	printf("Error in opening file-coord\n");
@@ -168,15 +180,13 @@ int main(int argc, char** argv)
                         	fscanf(f_coord,"%c",&pos[i][j]);
                 	}
         	}
-        	fclose(f_coord);
-		
+        	fclose(f_coord);	
 		//increasing counter
 		counter = (counter + num);
         		
 	}
 	//choosing mating partners or parents.
-	parent_gen(res);
-        
+	parent_gen(res);        
 	//Generating input files for swap
 	for(i=0;i<tot;i++)
 	{
@@ -207,8 +217,8 @@ int main(int argc, char** argv)
 		en_par[i] = 0.0; //may be remove this
         }
 	//GA cycle starts here.
-
-	for(gen=1;gen<=tot_gen;gen++) // TODO change to tot_gen here.
+	//restart_gen = 1 for new calculations.
+        for(gen=restart_gen;gen<=tot_gen;gen++) // TODO change to tot_gen here.
 	{
 		//swapping between two parents to generate two children.
 		for(i=0;i<tot;i++) //initialising en[] array, which will store the energy of accepted children.
@@ -428,7 +438,6 @@ exit(0);
 //this function generates a random number between interval min_num and max_num, while avoiding a number (ear_v), if it lies in that interval.
 int randominlimits(int min_num,int max_num,int ear_v)
 {
-	int i;
 	int rn = -1;
 	int rn1 = -1;
 
@@ -968,7 +977,6 @@ free(prob);
 /*************************************************************************************************/
 int chooseornot(int u,double prob[])
 {
-        int i;
         double t = 0.0;
         int fact = 1000000;
         int tar = 0;
@@ -1026,7 +1034,6 @@ void checkpoint(int gen,char *pos_inp[],char *atom_inp[])
 	for(a=0;a<tot;a++)
 	{
 		sprintf(name1,"cord.backup.%d",a);
-		printf("%s\n",name1);
 		FILE *fx;
 		fx = fopen(name1,"w");
                 if(fx == NULL)
