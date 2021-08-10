@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 	//cleaning the directory, to avoid appending on earlier files.
-        system("./clean.bash");
+        //system("./clean.bash");
 	srand(clock());
 
 	int i,j,k,p,counter,u,v;
