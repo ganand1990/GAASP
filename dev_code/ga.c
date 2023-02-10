@@ -4,11 +4,11 @@
 #include<stdlib.h>
 #include<time.h>
 
-#define num 500        //number of atoms
-#define tot 20         //number of parents in the intial population
+#define num 432       //number of atoms
+#define tot 100         //number of parents in the intial population
 #define width 33        //width-1 is the width of coord file
 #define width_ele 2     //width associated with atom type
-#define tot_gen 20
+#define tot_gen 100
 #define rb 8.314e-3
 #define T 300
 //Roulette wheel parameters
@@ -27,7 +27,7 @@ int degen_count(double [],int);
 void par_sel(int,double [],int []);
 int chooseornot(int,double[]);
 int child_accept(double);
-void checkpoint(char *[],char *[]);
+void checkpoint(char *[],char *[],int);
 void sort_energies(char *[],char *[],char *[],char *[],double []);
 void parent_regen(int [],int []); //to generate the res[] array containing new parent population, depending upon earlier population.
 int main() //int argc, char **argv
@@ -57,7 +57,7 @@ int main() //int argc, char **argv
         //system("./clean.bash");
 	srand(clock());
 
-	int i,j,k,p,counter,u,v,m;
+	int i,j,k,p,counter,u,v,m,l;
 	int total = num*tot;
 	int ret_const = -1;	// this variable would return a constant, whose value can be 1,2,3 and 4 depicting child 1, child 2, both children and none of children, respectively has/have been chosen. 
 	FILE *f_atom;
@@ -164,7 +164,7 @@ int main() //int argc, char **argv
 		if(restart_val == 0)
 			sprintf(atfile,"atomlist.%d",p);
 		else if(restart_val == 1) //if, calculation is being restarted
-			sprintf(atfile,"alist.backup.%d",p);
+			sprintf(atfile,"alist.backup.%d.%d",(restart_gen-1),p);
                 else
 			;	
         
@@ -187,7 +187,7 @@ int main() //int argc, char **argv
         	if(restart_val == 0)
 			sprintf(cordfile,"coord.%d",p);
 		else if(restart_val == 1) //if, calculation is being restarted.
-			sprintf(cordfile,"cord.backup.%d",p);
+			sprintf(cordfile,"cord.backup.%d.%d",(restart_gen-1),p);
 		else
 			;
                 f_coord = fopen(cordfile,"r");
@@ -209,7 +209,7 @@ int main() //int argc, char **argv
 		counter = (counter + num);
         		
 	}
-        //for(i=0;i<width_ele;i++) TODO delete this after testing!
+        //for(i=0;i<width_ele;i++) //TODO delete this after testing!
 	//{
 	//	printf("%c",atom[total-1][i]);
 	//}
@@ -217,10 +217,10 @@ int main() //int argc, char **argv
 	//choosing mating partners or parents.
 	//parent_gen(res);
         //TODO remove this	
-        //for(i=0;i<tot;i++)
-	//{
-	//	printf("%d\t%d\n",i,res[i]);
-	//}
+        for(i=0;i<tot;i++)
+	{
+		res[i] = -1;
+	}
         //exit(0);	
 	//Generating input files for swap
 	for(i=0;i<tot;i++)
@@ -261,7 +261,12 @@ int main() //int argc, char **argv
 			en[i] = 0.0;
 		}
 		//generating parent population identity for a particular GA cycle
+		//printf("check initial\n"); //TODO delete this
 		parent_gen(res);
+		for(i=0;i<tot;i++) //TODO delete this
+		{
+			printf("res[] = %d\n",res[i]);
+		}
 		k = 0;
 		do 
 		{
@@ -279,9 +284,35 @@ int main() //int argc, char **argv
 
 			//Above is commented out as the parent should be chosen sequentially.
 			//parent_gen(res);
-			u = res[k]; 
-			v = res[k+1];
-			
+
+			if(k == tot - 1)
+			{ 
+				//This is being done to deal with a scenarion involving 
+				//single configuration left in the end due to one rejection
+				//during the GA cycle. 
+				//a random parent is being chosen for a single parent here. 
+				//It is being chosen randomly due to an apprehension that 
+				//simply sequential selection might lead to a recursive loop.
+				l = (rand() % tot);
+				u = res[k];
+                                if(u == l) //to ensure that mating with self doesn't occur!
+				{
+					while(u == l)
+					{
+						l = (rand() % tot);
+					}
+				}
+				else
+				{
+					;
+				}
+				v = res[l];
+			}
+			else
+			{
+				u = res[k]; 
+				v = res[k+1];
+			}
 			
 			par_en[0] = en_par[u];
 			par_en[1] = en_par[v];
@@ -316,7 +347,7 @@ int main() //int argc, char **argv
 			ret_const = swap(pos1,pos2,atom1,atom2,acc_en,par_en); //TODO uncomment, when required.
 			printf("gen_after = %d\n",gen); //TODO delete this
 			//TODO delete this
-        		//printf("pos1[0]-outswwap\n");
+        		printf("k-value=%d\n",k);
         		//for(m=0;m<width;m++)
         		//{
                 	//	printf("%c",pos1[0][m]);
@@ -363,6 +394,7 @@ int main() //int argc, char **argv
 			{
 				if(k == (tot - 1)) //this is the scenario when only one config and its energy can be accpted in population, but there are two accepted children.
 				{
+					printf("check-k=%d\n",k); //TODO delete this
 					for(i=0;i<num;i++)
                                         {
                                                 for(j=0;j<width;j++)
@@ -374,12 +406,13 @@ int main() //int argc, char **argv
                                                         atom_pre[((k * num) + i)][j] = atom1[i][j];
                                                 }
                                         }
+					printf("check-k=%d\n",k); //TODO delete this
 					en[k] = acc_en[0];
 					k=k+1;
 				}
 				else
 				{
-					//printf("here\n");
+					printf("here\n"); //TODO delete this
 					for(i=0;i<num;i++) 
                         		{
                                 		for(j=0;j<width;j++)
@@ -404,6 +437,7 @@ int main() //int argc, char **argv
                         		}
 					en[k] = acc_en[0];
 					en[k+1] = acc_en[1];
+					printf("here-2\n"); //TODO delete this
 					k=k+2;
 				}
 				//k = k + 2;
@@ -494,15 +528,15 @@ int main() //int argc, char **argv
 		
 		for(i=0;i<tot;i++)
 		{
-			u = res[i];
-			en_par[i] = en[u]; //might not need this.
+			//u = res[i];
+			en_par[i] = en[i]; 
 		}	
 		//writting the status of the GA
 		status_write(gen);
 
 		//writing checkpoint file
 		if(gen%check == 0)
-		checkpoint(pos_inp,atom_inp);
+		checkpoint(pos_inp,atom_inp,gen);
 	}//ga cycle ends here.
     
 	//freeing the memory	
@@ -614,10 +648,10 @@ void parent_gen(int res[])
 	}	
 	int a,b,u,v,w,counter,x;
         //TODO delete this
-        //for(a=0;a<tot;a++)
-	//{
-	//    printf("res = %d\n",res[a]);
-	//}	    
+        for(a=0;a<tot;a++)
+	{
+	    printf("res = %d\n",res[a]);
+	}	    
 	int max_num = 0;
 	int each_num = 0;
 	each_num=tot/pop_div;
@@ -646,11 +680,12 @@ void parent_gen(int res[])
         int ear_v = -1; //variable to store the value of v in particular case, which would be compared with v in next random generation.
 	for(a=0;a<tot;a++) 
 	{
-		u = (rand() % max_num)+1; //finding random number b/n 0 and div_fact^pop_div
+		u = (rand() % max_num)+1; //finding random number b/n 0 and div_fact^(pop_div+1)
 		//u = (rand() / (RAND_MAX/max_num + 1)) + 1;
+		//u=2044; //TODO delete this
 		//printf("u = %d\n",u); //TODO delete this
 		w=0;
-		b=1; 
+		b=1;
 		v=0;
 		while(v > 0 || v == 0)
 		{
@@ -658,7 +693,9 @@ void parent_gen(int res[])
 			if(v < 0 || v == 0) //TODO v == 1 has been removed!
 		        {
 				x = randominlimits(0,each_num,ear_v);
-				res[a] = parent[b-1][x]; //because b starts with 1.
+				//res[a] = parent[b-1][x]; //because b starts with 1. TODO low-energy selection.
+                                printf("check in parent-1 = %d,%d\n",(pop_div-1)-(b-1),parent[(pop_div-1)-(b-1)][x]);
+				res[a] = parent[(pop_div-1)-(b-1)][x]; //TODO high energy selection
 			        ear_v = x;
 				break;
 			}
@@ -671,7 +708,9 @@ void parent_gen(int res[])
 			else if( v > 0 && (b == pop_div))
 			{
 				x = randominlimits(0,each_num,ear_v);
-				res[a] = parent[b-1][x]; //because b starts with 1.
+				//res[a] = parent[b-1][x]; //because b starts with 1. TODO low-energy selection
+				printf("check in parent-2 = %d\n",parent[0][x]);
+				res[a] = parent[0][x]; //TODO high-energy selection
 				ear_v = x;
 				break;
 			}
@@ -681,7 +720,7 @@ void parent_gen(int res[])
 				exit(1);
 			}	
 		}
-		//printf("a = %d, b = %d, x = %d\n",a,b,x); //TODO delete this
+		printf("a = %d, b = %d, x = %d\n",a,b,x); //TODO delete this
 	}
 	/*
 	for(a=0;a<tot;a++)
@@ -1267,16 +1306,20 @@ int child_accept(double delta_ene)
 	
 }
 /*************************************************************************************************/
-void checkpoint(char *pos_inp[],char *atom_inp[])
+void checkpoint(char *pos_inp[],char *atom_inp[],int gen)
 {
 	int a,b,c;
-	system("rm -f alist.backup.*");
-	system("rm -f coord.backup.*");
+	char back1[20];
+	char back2[20];
+	sprintf(back1,"alist.backup.%d.*",gen);
+	sprintf(back2,"cord.backup.%d.*",gen);
+	system("rm -f back1*");
+	system("rm -f back2*");
 	char name1[20]; //keeping the name of the file within 15 char
 	char name2[20];
 	for(a=0;a<tot;a++)
 	{
-		sprintf(name1,"cord.backup.%d",a);
+		sprintf(name1,"cord.backup.%d.%d",gen,a);
 		FILE *fx;
 		fx = fopen(name1,"w");
                 if(fx == NULL)
@@ -1292,7 +1335,7 @@ void checkpoint(char *pos_inp[],char *atom_inp[])
 			}
                 }
                 fclose(fx);
-		sprintf(name2,"alist.backup.%d",a);
+		sprintf(name2,"alist.backup.%d.%d",gen,a);
 		FILE *fy;
 		fy = fopen(name2,"w");
 		if(fy == NULL)
