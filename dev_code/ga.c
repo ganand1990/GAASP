@@ -693,9 +693,9 @@ void parent_gen(int res[])
 			if(v < 0 || v == 0) //TODO v == 1 has been removed!
 		        {
 				x = randominlimits(0,each_num,ear_v);
-				//res[a] = parent[b-1][x]; //because b starts with 1. TODO low-energy selection.
+				res[a] = parent[b-1][x]; //because b starts with 1. TODO low-energy selection.
                                 printf("check in parent-1 = %d,%d\n",(pop_div-1)-(b-1),parent[(pop_div-1)-(b-1)][x]);
-				res[a] = parent[(pop_div-1)-(b-1)][x]; //TODO high energy selection
+				//res[a] = parent[(pop_div-1)-(b-1)][x]; //TODO high energy selection
 			        ear_v = x;
 				break;
 			}
@@ -708,9 +708,9 @@ void parent_gen(int res[])
 			else if( v > 0 && (b == pop_div))
 			{
 				x = randominlimits(0,each_num,ear_v);
-				//res[a] = parent[b-1][x]; //because b starts with 1. TODO low-energy selection
+				res[a] = parent[b-1][x]; //because b starts with 1. TODO low-energy selection
 				printf("check in parent-2 = %d\n",parent[0][x]);
-				res[a] = parent[0][x]; //TODO high-energy selection
+				//res[a] = parent[0][x]; //TODO high-energy selection
 				ear_v = x;
 				break;
 			}
@@ -848,7 +848,7 @@ int swap(char pos1[][width],char pos2[][width],char atom1[][width_ele],char atom
                 {
                         printf("%c",tempcord2[k]);
                 }
-                for(k=0;k<width_ele;k++)
+                for(k=0;k<width_ele;k++) //TODO Maybe this doesn't serve any purpose.
                 {
                         tempat1[k] = atom1[j][k];
                         tempat2[k] = atom2[j][k];
@@ -864,7 +864,7 @@ int swap(char pos1[][width],char pos2[][width],char atom1[][width_ele],char atom
                 {
                         printf("%c",tempat2[k]);
                 }
-                //NOTE THAT AT SAME VALUE OF j THE IDENTITY OF ATOM IN BOTH ATOM1[][] AND ATOM2[][] WOULD BE SAME, DUE TO THE WAY CONFIG FILES ARE WRITTEN IN DL_POLY.  
+                //NOTE THAT AT SAME VALUE OF j THE IDENTITY OF ATOM IN BOTH ATOM1[][] AND ATOM2[][] WOULD BE SAME, DUE TO THE WAY CONFIGURATIONS ARE ENCODED.  
                 //Finding the atom number in config.2, which has same coordinates as jth atom in config.1 
                 for(l=0;l<atom_num;l++) //change to atom_num here.
                 {
@@ -909,14 +909,24 @@ int swap(char pos1[][width],char pos2[][width],char atom1[][width_ele],char atom
 		//printf("the atom in config.1 having same coordinate as %d in config.2 is %d\n",j,u);
                 //uth atom in config.1 has same coordinates as jth atom in config.2
                 //swapping coordinates of jth and uth atom in config.1 file and jth and uth atom in config.2 file.
-                for(k=0;k<width;k++)
-                {
-                        pos1[j][k] = tempcord2[k];
-                        pos1[u][k] = tempcord1[k];
+                //for(k=0;k<width;k++) //TODO Uncomment, if constant composition is required.
+                //{
+                //        pos1[j][k] = tempcord2[k];
+                //        pos1[u][k] = tempcord1[k];
 
-                        pos2[j][k] = tempcord1[k];
-                        pos2[l][k] = tempcord2[k];
-                }
+                //        pos2[j][k] = tempcord1[k];
+                //        pos2[l][k] = tempcord2[k];
+                //}
+		//COMPOSITION VARIATION, MAKES SURE THAT COMPOSITION CONSTANT PART IS NOT ACTIVE.
+		//HERE, in config.1, jth atom in atomlist is replaced with the uth atom in config.1
+		//In config.2, jth atom in atomlist is replaced with lth atom in config.2
+		for(k=0;k<width_ele;k++)
+		{
+			atom1[j][k] = atom1[u][k];
+
+			atom2[j][k] = atom2[l][k];
+
+		}
         }
         //TODO delete this
 	printf("pos1[0]\n");
@@ -1020,7 +1030,7 @@ int swap(char pos1[][width],char pos2[][width],char atom1[][width_ele],char atom
 	}
 	/*****************************************/	
 	//TODO remove this, if acceptance criteria needs to be introduced.
-	ret_const = 3;  //The value of 3 has been simply assigned, in case of acceptance criteria has not been defined and all the children are accepted.
+	//ret_const = 3;  //The value of 3 has been simply assigned, in case of acceptance criteria has not been defined and all the children are accepted.
 
 	//this section should be invoked if only accepted energy values need to be added.
 	if(ret_const == 1)
